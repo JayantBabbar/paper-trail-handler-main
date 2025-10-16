@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 interface DepartmentSelectProps {
@@ -23,14 +23,8 @@ export function DepartmentSelect({
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('departments')
-        .select('name')
-        .order('name');
-      
-      if (error) throw error;
-      // Filter out "Other" from database results since we'll add it manually
-      return data.map(d => d.name).filter(name => name.toLowerCase() !== 'other');
+      const data = await api.getDepartments();
+      return (data || []).map((d: any) => d.name).filter((name: string) => name.toLowerCase() !== 'other');
     }
   });
 

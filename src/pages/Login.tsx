@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import api, { setToken } from "@/lib/api";
 
 export function Login() {
   const navigate = useNavigate();
@@ -38,13 +39,29 @@ export function Login() {
     if (!validateForm()) return;
     
     setIsLoading(true);
-    
-    if (email === "daksystemfitt@gmail.com" && password === "admin@DakFITT") {
-      localStorage.setItem("isAuthenticated", "true");
-      toast.success("Login successful!");
-      navigate("/");
-    } else {
-      toast.error("Invalid credentials");
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || 'http://localhost:8000'}/api/auth/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (!resp.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const data = await resp.json();
+  const access = data.access;
+  const refresh = data.refresh;
+  if (!access) throw new Error('No access token returned');
+
+  setToken(access);
+  if (refresh) localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('isAuthenticated', 'true');
+      toast.success('Login successful!');
+      navigate('/');
+    } catch (err: any) {
+      toast.error(err.message || 'Login failed');
     }
     
     setIsLoading(false);

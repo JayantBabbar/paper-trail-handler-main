@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 
 export function useFileNumberGenerator() {
   const [generatedFileNumber, setGeneratedFileNumber] = useState<string>("");
@@ -21,12 +21,9 @@ export function useFileNumberGenerator() {
         }
       };
       
-      const { data: existingFiles } = await supabase
-        .from('files')
-        .select('id')
-        .like('file_number', `FT/${getFilePrefix(fileType)}/%`);
-      
-      const sequenceNumber = (existingFiles?.length || 0) + 1;
+      const files = await api.getFiles();
+      const matching = (files || []).filter((f: any) => (f.file_number || f.fileNumber || '').startsWith(`FT/${getFilePrefix(fileType)}/`));
+      const sequenceNumber = (matching.length || 0) + 1;
       const fileNumber = `FT/${getFilePrefix(fileType)}/${sequenceNumber.toString().padStart(3, '0')}`;
       
       setGeneratedFileNumber(fileNumber);

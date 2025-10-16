@@ -1,7 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { v4 as uuidv4 } from 'uuid';
 import { useFileNumberGenerator } from "./hooks/useFileNumberGenerator";
 import { useFileUpload } from "./hooks/useFileUpload";
@@ -85,14 +85,7 @@ export function useFileUploadForm() {
       // If "Other" is selected, save the custom department first
       if (department === "Other" && otherDepartment) {
         console.log("Adding custom department:", otherDepartment);
-        const { error: deptError } = await supabase.rpc('add_custom_department', {
-          department_name: otherDepartment
-        });
-
-        if (deptError) {
-          console.error("Department error:", deptError);
-          throw deptError;
-        }
+        await api.addDepartment({ name: otherDepartment, is_custom: true });
 
         // Invalidate departments query to refresh the dropdown
         queryClient.invalidateQueries({ queryKey: ['departments'] });
@@ -124,7 +117,7 @@ export function useFileUploadForm() {
         title,
         type: fileType,
         department: department === "Other" ? otherDepartment : department,
-        date: date.toISOString(),
+        date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
         status: needsReturn ? "Pending" : "Completed",
         description,
         remarks,
@@ -134,14 +127,7 @@ export function useFileUploadForm() {
       
       console.log("Inserting file data:", fileData);
       
-      const { error: insertError } = await supabase
-        .from('files')
-        .insert(fileData);
-
-      if (insertError) {
-        console.error("Insert error:", insertError);
-        throw insertError;
-      }
+      await api.createFile(fileData);
 
       console.log("File record created successfully");
       queryClient.invalidateQueries({ queryKey: ['files'] });

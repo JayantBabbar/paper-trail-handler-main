@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
 
 export interface FileRecord {
@@ -30,42 +30,20 @@ export const useFileState = () => {
   const { data: files = [], isLoading } = useQuery({
     queryKey: ['files'],
     queryFn: async () => {
-      console.log('Fetching files from Supabase...');
-      const { data: filesData, error: filesError } = await supabase
-        .from('files')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (filesError) {
-        console.error('Error fetching files:', filesError);
-        throw filesError;
-      }
-
-      const { data: historyData, error: historyError } = await supabase
-        .from('status_history')
-        .select('*');
-
-      if (historyError) {
-        console.error('Error fetching status history:', historyError);
-        throw historyError;
-      }
-
-      console.log('Files data:', filesData);
-      console.log('History data:', historyData);
-
-      return filesData.map(file => ({
+      console.log('Fetching files from API...');
+      const filesData = await api.getFiles();
+      // Expect backend to return files with status_history included
+      return filesData.map((file: any) => ({
         ...file,
         id: file.id,
-        fileNumber: file.file_number,
+        fileNumber: file.file_number || file.fileNumber,
         date: new Date(file.date),
-        needsReturn: file.needs_return,
-        statusHistory: historyData
-          .filter(h => h.file_id === file.id)
-          .map(h => ({
-            status: h.status,
-            timestamp: new Date(h.timestamp),
-            reason: h.reason
-          }))
+        needsReturn: file.needs_return || file.needsReturn || false,
+        statusHistory: (file.status_history || file.statusHistory || []).map((h: any) => ({
+          status: h.status,
+          timestamp: new Date(h.timestamp),
+          reason: h.reason
+        }))
       })) as FileRecord[];
     }
   });
@@ -80,26 +58,8 @@ export const useFileState = () => {
       newStatus: string; 
       reason?: string 
     }) => {
-      console.log('Updating file status:', { fileId, newStatus, reason });
-      
-      // Update file status
-      const { error: fileError } = await supabase
-        .from('files')
-        .update({ status: newStatus })
-        .eq('id', fileId);
-
-      if (fileError) throw fileError;
-
-      // Add status history
-      const { error: historyError } = await supabase
-        .from('status_history')
-        .insert({
-          file_id: fileId,
-          status: newStatus,
-          reason
-        });
-
-      if (historyError) throw historyError;
+      console.log('Updating file status via API:', { fileId, newStatus, reason });
+      await api.updateFileStatus(fileId, newStatus, reason);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['files'] });

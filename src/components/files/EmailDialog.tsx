@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { FileText, Mail } from "lucide-react";
 import { format } from "date-fns";
 
@@ -41,18 +41,12 @@ export function EmailDialog({ isOpen, onClose, fileId, fileTitle }: EmailDialogP
   }, [isOpen, fileId]);
 
   const loadEmailThreads = async () => {
-    const { data, error } = await supabase
-      .from('email_threads')
-      .select('*')
-      .eq('file_id', fileId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading email threads:', error);
-      return;
+    try {
+      const data = await api.getEmailThreads(fileId);
+      setEmailThreads(data || []);
+    } catch (e) {
+      console.error('Error loading email threads:', e);
     }
-
-    setEmailThreads(data || []);
   };
 
   const handleSend = async () => {
@@ -67,75 +61,27 @@ export function EmailDialog({ isOpen, onClose, fileId, fileTitle }: EmailDialogP
     setIsSending(true);
 
     try {
-      // Get the file URL first
-      const { data: fileData, error: fileError } = await supabase
-        .from('files')
-        .select('storage_path')
-        .eq('id', fileId)
-        .single();
-
-      if (fileError) {
-        throw new Error(`Failed to fetch file data: ${fileError.message}`);
+      // Fetch file record to get storage path (backend may provide accessible URL or storage path)
+      const fileData = await api.getFile(fileId);
+      let fileUrl = '';
+      let fileName = '';
+      if (fileData?.storage_path) {
+        fileUrl = fileData.storage_path;
+        fileName = fileData.storage_path.split('/').pop();
       }
 
-      if (!fileData?.storage_path) {
-        throw new Error('No file attached to this record');
-      }
-
-      console.log('Fetched file data:', fileData);
-
-      // Get a signed URL for the file
-      const { data: signedUrlData, error: urlError } = await supabase.storage
-        .from('files')
-        .createSignedUrl(fileData.storage_path, 3600);
-
-      if (urlError) {
-        throw new Error(`Failed to generate signed URL: ${urlError.message}`);
-      }
-
-      if (!signedUrlData?.signedUrl) {
-        throw new Error('Could not generate file download URL');
-      }
-
-      console.log('Generated signed URL successfully');
-
-      // Send email with attachment
-      const { error: emailError } = await supabase.functions.invoke('send-email', {
-        body: JSON.stringify({
-          recipientEmail,
-          ccEmail,
-          subject,
-          messageBody,
-          fileUrl: signedUrlData.signedUrl,
-          fileName: fileData.storage_path.split('/').pop()
-        })
+      // Send email via backend send-email endpoint
+      await api.sendEmail({
+        recipientEmail,
+        ccEmail,
+        subject,
+        messageBody,
+        fileUrl,
+        fileName,
+        fileId
       });
 
-      if (emailError) {
-        console.error('Email sending error:', emailError);
-        throw new Error(`Failed to send email: ${emailError.message}`);
-      }
-
-      console.log('Email sent successfully');
-
-      // Insert into email_threads with the correct schema
-      const { error: threadError } = await supabase
-        .from('email_threads')
-        .insert({
-          file_id: fileId,
-          recipient_email: recipientEmail,
-          cc_email: ccEmail,
-          subject: subject,
-          message_body: messageBody,
-          sender_email: 'system@example.com',
-          status: 'sent'
-        });
-
-      if (threadError) {
-        console.error('Error recording email thread:', threadError);
-        throw new Error(`Failed to record email thread: ${threadError.message}`);
-      }
-
+      // Refresh threads
       await loadEmailThreads();
 
       toast({

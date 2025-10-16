@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { v4 as uuidv4 } from 'uuid';
 
 export function useFileUpload() {
@@ -34,44 +34,11 @@ export function useFileUpload() {
 
   const uploadFile = async (fileId: string) => {
     if (!fileDetails) return null;
+    const form = new FormData();
+    form.append('file', fileDetails, fileDetails.name);
 
-    // First, try to initialize the bucket if needed
-    try {
-      const { data: buckets } = await supabase.storage.listBuckets();
-      if (!buckets?.some(bucket => bucket.name === 'files')) {
-        await supabase.storage.createBucket('files', {
-          public: true,
-          fileSizeLimit: 50000000, // 50MB
-        });
-        console.log('Created files bucket');
-      }
-    } catch (error) {
-      console.error('Error checking/creating bucket:', error);
-    }
-
-    const fileExt = fileDetails.name.split('.').pop();
-    const fileName = `${fileId}.${fileExt}`;
-    
-    try {
-      // Attempt to upload the file
-      const { error: uploadError, data } = await supabase.storage
-        .from('files')
-        .upload(fileName, fileDetails, {
-          cacheControl: '3600',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-      
-      console.log('File uploaded successfully:', data.path);
-      return data.path;
-    } catch (error) {
-      console.error('File upload failed:', error);
-      throw error;
-    }
+    const body = await api.uploadFile(form);
+    return body.storage_path;
   };
 
   return {

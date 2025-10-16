@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 
 export function FilesList() {
@@ -47,23 +47,17 @@ export function FilesList() {
   const handleDelete = async () => {
     if (!fileToDelete) return;
 
-    const { error } = await supabase
-      .from('files')
-      .delete()
-      .eq('id', fileToDelete);
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete file. Please try again.",
-      });
-    } else {
-      // Invalidate the files query to trigger a refresh
+    try {
+      await api.deleteFile(fileToDelete);
       queryClient.invalidateQueries({ queryKey: ['files'] });
-      
       toast({
         title: "Success",
         description: "File has been deleted successfully.",
+      });
+    } catch (e) {
+      toast({
+        title: "Error",
+        description: "Failed to delete file. Please try again.",
       });
     }
 

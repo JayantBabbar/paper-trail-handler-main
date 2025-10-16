@@ -3,7 +3,8 @@ import { FileRecord } from "@/hooks/useFileState";
 import { StatusHistory } from "./StatusHistory";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+
+const MEDIA_BASE = import.meta.env.VITE_MEDIA_BASE_URL || '';
 
 interface FileDetailsCardProps {
   fileDetails: FileRecord;
@@ -12,13 +13,8 @@ interface FileDetailsCardProps {
 export function FileDetailsCard({ fileDetails }: FileDetailsCardProps) {
   const handleViewFile = async () => {
     if (fileDetails.storage_path) {
-      const { data } = await supabase.storage
-        .from('files')
-        .createSignedUrl(fileDetails.storage_path, 60);
-
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
-      }
+      const url = MEDIA_BASE ? `${MEDIA_BASE}${fileDetails.storage_path}` : fileDetails.storage_path;
+      window.open(url, '_blank');
     }
   };
 

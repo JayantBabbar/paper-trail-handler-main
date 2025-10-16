@@ -1,7 +1,0 @@
-
-project_id = "yjaqzqauwjdfayoltcsp"
-
-[global.env]
-SUPABASE_URL = "env"
-SUPABASE_SERVICE_ROLE_KEY = "env"
-EMAIL_PASSWORD = "env"

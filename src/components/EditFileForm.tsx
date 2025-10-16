@@ -11,7 +11,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/lib/supabase";
+import api from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { FileRecord } from "@/hooks/useFileState";
@@ -67,22 +67,15 @@ export function EditFileForm({ fileId, initialData }: EditFileFormProps) {
     setIsSubmitting(true);
 
     try {
-      const { error: updateError } = await supabase
-        .from('files')
-        .update({
-          title,
-          type: fileType,
-          department,
-          date,
-          description,
-          remarks,
-          needs_return: needsReturn,
-        })
-        .eq('id', fileId);
-
-      if (updateError) {
-        throw updateError;
-      }
+      await api.updateFile(fileId, {
+        title,
+        type: fileType,
+        department,
+        date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        description,
+        remarks,
+        needs_return: needsReturn,
+      });
 
       // Refresh files list
       queryClient.invalidateQueries({ queryKey: ['files'] });

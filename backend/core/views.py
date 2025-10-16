@@ -15,6 +15,11 @@ from .serializers import (
     UserSerializer,
 )
 
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.utils.decorators import method_decorator
+
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
@@ -123,3 +128,23 @@ def send_email(request):
         thread.error_message = str(e)
         thread.save()
         return Response({'success': False, 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@csrf_exempt
+def upload_file(request):
+    # Accept multipart form upload with file field 'file'
+    print(f"Upload request received: {request.method}")
+    print(f"Files in request: {list(request.FILES.keys())}")
+    
+    upload = request.FILES.get('file')
+    if not upload:
+        return Response({'detail': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    filename = upload.name
+    # Save to MEDIA_ROOT/files/<filename>
+    path = default_storage.save(f'files/{filename}', ContentFile(upload.read()))
+
+    storage_path = path
+
+    return Response({'storage_path': storage_path})

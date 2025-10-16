@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileUploadForm } from "@/components/FileUploadForm";
 import { FilesList } from "@/components/FilesList";
 import { ViewDetails } from "@/components/ViewDetails";
@@ -7,24 +7,11 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, List } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
-import { initializeStorage } from "@/lib/supabase";
 
 const Index = () => {
   const [view, setView] = useState<"list" | "upload">("list");
   const { id } = useParams();
   
-  // Initialize storage when the component mounts
-  useEffect(() => {
-    const setupStorage = async () => {
-      try {
-        await initializeStorage();
-      } catch (error) {
-        console.error("Error initializing storage:", error);
-      }
-    };
-    
-    setupStorage();
-  }, []);
 
   if (id) {
     return (
