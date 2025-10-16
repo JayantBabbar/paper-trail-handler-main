@@ -19,13 +19,13 @@ export default function Register() {
       if (data.access) {
         setToken(data.access);
         localStorage.setItem('isAuthenticated', 'true');
-        toast.success('Registration successful');
+        toast.success('Registration successful', { duration: 8000 });
         navigate('/');
       } else {
-        toast.error('Registration succeeded but no token returned');
+        toast.error('Registration succeeded but no token returned', { duration: 8000 });
       }
     } catch (e: any) {
-      toast.error(e.message || 'Registration failed');
+      toast.error(e.message || 'Registration failed', { duration: 8000 });
     } finally {
       setIsLoading(false);
     }
@@ -39,6 +39,19 @@ export default function Register() {
           <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <Input placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <Button type="submit" disabled={isLoading}>{isLoading ? 'Registering...' : 'Register'}</Button>
+          
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-[#ea384c] hover:text-[#d42d3d] font-medium underline transition-colors"
+              >
+                Sign In
+              </button>
+            </p>
+          </div>
         </form>
       </div>
     </div>

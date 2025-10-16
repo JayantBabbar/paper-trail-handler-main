@@ -58,10 +58,10 @@ export function Login() {
   setToken(access);
   if (refresh) localStorage.setItem('refreshToken', refresh);
       localStorage.setItem('isAuthenticated', 'true');
-      toast.success('Login successful!');
+      toast.success('Login successful!', { duration: 8000 });
       navigate('/');
     } catch (err: any) {
-      toast.error(err.message || 'Login failed');
+      toast.error(err.message || 'Login failed', { duration: 8000 });
     }
     
     setIsLoading(false);
@@ -138,6 +138,19 @@ export function Login() {
           >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              New User?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="text-[#ea384c] hover:text-[#d42d3d] font-medium underline transition-colors"
+              >
+                Register Now
+              </button>
+            </p>
+          </div>
         </form>
       </div>
     </div>

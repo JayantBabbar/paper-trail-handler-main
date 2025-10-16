@@ -57,7 +57,7 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <main className="min-h-screen bg-[#F6F6F7]">
+                  <main className="min-h-screen bg-[#F6F6F7] pt-12">
                     <Navbar />
                     <Index />
                   </main>
@@ -68,7 +68,7 @@ function App() {
               path="/files/:id"
               element={
                 <ProtectedRoute>
-                  <main className="min-h-screen bg-[#F6F6F7]">
+                  <main className="min-h-screen bg-[#F6F6F7] pt-12">
                     <Navbar />
                     <ViewDetails />
                   </main>
@@ -79,7 +79,7 @@ function App() {
               path="/files/:id/edit"
               element={
                 <ProtectedRoute>
-                  <main className="min-h-screen bg-[#F6F6F7]">
+                  <main className="min-h-screen bg-[#F6F6F7] pt-12">
                     <Navbar />
                     <EditFile />
                   </main>

@@ -54,6 +54,8 @@ interface State {
 export function toast(props: Omit<ToasterToast, "id">) {
   sonnerToast(props.title as string, {
     description: props.description,
+    duration: 8000,
+    dismissible: true,
   })
 }
 
