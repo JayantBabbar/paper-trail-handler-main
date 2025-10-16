@@ -1,6 +1,7 @@
 import os
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.conf import settings
@@ -27,8 +28,16 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 
 class FileViewSet(viewsets.ModelViewSet):
-    queryset = File.objects.all().order_by('-created_at')
     serializer_class = FileSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Only return files owned by the authenticated user
+        return File.objects.filter(owner=self.request.user).order_by('-created_at')
+    
+    def perform_create(self, serializer):
+        # Automatically set the owner to the authenticated user
+        serializer.save(owner=self.request.user)
 
     @action(detail=True, methods=['post'])
     def update_status(self, request, pk=None):
@@ -46,13 +55,21 @@ class FileViewSet(viewsets.ModelViewSet):
 
 
 class StatusHistoryViewSet(viewsets.ModelViewSet):
-    queryset = StatusHistory.objects.all().order_by('-timestamp')
     serializer_class = StatusHistorySerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Only return status history for files owned by the authenticated user
+        return StatusHistory.objects.filter(file__owner=self.request.user).order_by('-timestamp')
 
 
 class EmailThreadViewSet(viewsets.ModelViewSet):
-    queryset = EmailThread.objects.all().order_by('-created_at')
     serializer_class = EmailThreadSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Only return email threads for files owned by the authenticated user
+        return EmailThread.objects.filter(file__owner=self.request.user).order_by('-created_at')
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -61,6 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def send_email(request):
     data = request.data
     recipient = data.get('recipientEmail')
@@ -131,6 +149,7 @@ def send_email(request):
 
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 @csrf_exempt
 def upload_file(request):
     # Accept multipart form upload with file field 'file'

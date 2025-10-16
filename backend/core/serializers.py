@@ -15,10 +15,12 @@ class StatusHistorySerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     status_history = StatusHistorySerializer(many=True, read_only=True)
+    owner = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = File
         fields = '__all__'
+        read_only_fields = ('owner',)
 
 
 class EmailThreadSerializer(serializers.ModelSerializer):
