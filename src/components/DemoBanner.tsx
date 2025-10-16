@@ -12,8 +12,8 @@ export function DemoBanner() {
     <Alert className="border-blue-200 bg-blue-50 mb-4">
       <Info className="h-4 w-4 text-blue-600" />
       <AlertDescription className="text-blue-800">
-        <strong>Demo Mode:</strong> This is a demonstration with sample data. 
-        Backend is not connected. All actions are simulated locally.
+        <strong>Demo Mode:</strong> This is a user-specific demonstration with sample data. 
+        Each user sees their own files. Backend is not connected - all data is stored locally.
       </AlertDescription>
     </Alert>
   );

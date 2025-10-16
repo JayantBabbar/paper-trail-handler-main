@@ -1,4 +1,4 @@
-import { mockApi } from './mockApi';
+import { mockApi, clearMockUserData } from './mockApi';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || 'http://localhost:8000';
 
@@ -162,4 +162,8 @@ export function setToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem('accessToken');
+  // Also clear mock user data if in mock mode
+  if (USE_MOCK) {
+    clearMockUserData();
+  }
 }
