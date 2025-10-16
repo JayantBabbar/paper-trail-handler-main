@@ -65,41 +65,85 @@ const MOCK_DEPARTMENTS = [
   { id: "4", name: "Operations", is_custom: false }
 ];
 
+// Helper function to simulate network delay
+const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const mockApi = {
   // Files
-  getFiles: () => Promise.resolve(MOCK_FILES),
-  getFile: (id: string) => Promise.resolve(MOCK_FILES.find(f => f.id === id)),
-  createFile: (data: any) => Promise.resolve({ id: Date.now().toString(), ...data }),
-  updateFile: (id: string, data: any) => Promise.resolve({ id, ...data }),
-  deleteFile: (id: string) => Promise.resolve({ success: true }),
+  getFiles: async () => { await delay(); return MOCK_FILES; },
+  getFile: async (id: string) => { await delay(); return MOCK_FILES.find(f => f.id === id); },
+  createFile: async (data: any) => { await delay(); return { id: Date.now().toString(), ...data }; },
+  updateFile: async (id: string, data: any) => { await delay(); return { id, ...data }; },
+  deleteFile: async (id: string) => { await delay(); return { success: true }; },
   
   // Departments
-  getDepartments: () => Promise.resolve(MOCK_DEPARTMENTS),
+  getDepartments: async () => { await delay(); return MOCK_DEPARTMENTS; },
   
   // Status
-  updateFileStatus: (id: string, status: string, reason?: string) => 
-    Promise.resolve({ id: Date.now().toString(), file: id, status, reason, timestamp: new Date().toISOString() }),
+  updateFileStatus: async (id: string, status: string, reason?: string) => {
+    await delay();
+    return { id: Date.now().toString(), file: id, status, reason, timestamp: new Date().toISOString() };
+  },
     
   // Auth (mock)
-  login: (email: string, password: string) => {
-    // Mock successful login for any credentials
+  login: async (email: string, password: string) => {
+    console.log('Mock login called with:', { email, password });
+    await delay(500); // Simulate auth delay
+    
+    // Validate basic input
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+    
+    // Mock successful login for any valid credentials
     const mockToken = 'mock-jwt-token-' + Date.now();
     const mockRefresh = 'mock-refresh-token-' + Date.now();
     localStorage.setItem('accessToken', mockToken);
-    return Promise.resolve({ access: mockToken, refresh: mockRefresh });
+    console.log('Mock login successful, token set');
+    
+    return { access: mockToken, refresh: mockRefresh };
   },
-  register: (email: string, password: string) => {
+  
+  register: async (email: string, password: string) => {
+    console.log('Mock register called with:', { email, password });
+    await delay(500); // Simulate registration delay
+    
+    // Validate basic input
+    if (!email || !password) {
+      throw new Error('Email and password are required');
+    }
+    
+    if (!email.includes('@')) {
+      throw new Error('Please enter a valid email address');
+    }
+    
+    if (password.length < 6) {
+      throw new Error('Password must be at least 6 characters long');
+    }
+    
     // Mock successful registration
     const mockToken = 'mock-jwt-token-' + Date.now();
     const mockRefresh = 'mock-refresh-token-' + Date.now();
     localStorage.setItem('accessToken', mockToken);
-    return Promise.resolve({ access: mockToken, refresh: mockRefresh });
+    console.log('Mock registration successful, token set');
+    
+    return { access: mockToken, refresh: mockRefresh };
   },
-  getMe: () => Promise.resolve({ id: 1, email: 'demo@example.com' }),
+  
+  getMe: async () => {
+    await delay(200);
+    return { id: 1, email: 'demo@example.com' };
+  },
   
   // Upload
-  uploadFile: (file: File) => Promise.resolve({ storage_path: '/mock/path/' + file.name }),
+  uploadFile: async (file: File) => {
+    await delay(800); // Simulate file upload
+    return { storage_path: '/mock/path/' + file.name };
+  },
   
   // Email
-  sendEmail: (data: any) => Promise.resolve({ success: true })
+  sendEmail: async (data: any) => {
+    await delay(600);
+    return { success: true };
+  }
 };

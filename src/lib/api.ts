@@ -3,7 +3,17 @@ import { mockApi } from './mockApi';
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || 'http://localhost:8000';
 
 // Use mock API if no backend URL is configured or if in production without backend
-const USE_MOCK = !API_BASE || API_BASE === 'https://your-backend-api-url.com' || (import.meta.env.PROD && API_BASE === 'http://localhost:8000');
+const USE_MOCK = API_BASE === 'https://your-backend-api-url.com' || 
+                 (import.meta.env.PROD && API_BASE.includes('localhost')) ||
+                 import.meta.env.VITE_USE_MOCK === 'true';
+
+console.log('API Configuration:', {
+  API_BASE,
+  PROD: import.meta.env.PROD,
+  USE_MOCK,
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  VITE_USE_MOCK: import.meta.env.VITE_USE_MOCK
+});
 
 function buildUrl(path: string) {
   const base = API_BASE.replace(/\/$/, '');
@@ -36,14 +46,24 @@ async function request(path: string, opts: RequestInit = {}) {
 async function apiWithMockFallback<T>(apiCall: () => Promise<T>, mockCall: () => Promise<T>): Promise<T> {
   if (USE_MOCK) {
     console.log('Using mock API for demo');
-    return await mockCall();
+    try {
+      return await mockCall();
+    } catch (mockError: any) {
+      console.error('Mock API call failed:', mockError);
+      throw new Error('Mock API error: ' + mockError.message);
+    }
   }
   
   try {
     return await apiCall();
   } catch (error: any) {
-    console.warn('API call failed, falling back to mock data:', error.message);
-    return await mockCall();
+    console.warn('Real API call failed, falling back to mock data:', error.message);
+    try {
+      return await mockCall();
+    } catch (mockError: any) {
+      console.error('Mock API fallback also failed:', mockError);
+      throw new Error('Both real and mock API failed: ' + error.message);
+    }
   }
 }
 
