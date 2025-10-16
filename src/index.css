@@ -1,0 +1,84 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 13%;
+    --primary: 351 84% 57%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 13%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 13%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89%;
+    --input: 0 0% 89%;
+    --ring: 0 84% 60%;
+    --radius: 0.375rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-[#F1F0FB] text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.file-drop-zone {
+  @apply relative border-2 border-dashed rounded-md p-12 transition-all;
+}
+
+.file-drop-zone.dragging {
+  @apply border-primary bg-secondary/50;
+}
+
+.glass-panel {
+  @apply bg-white/95 backdrop-blur-sm border border-[#C8C8C9] shadow-lg rounded-md;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add table width styles */
+.table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Adjust container width for the app */
+.container {
+  max-width: 98% !important;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
