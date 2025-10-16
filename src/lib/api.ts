@@ -2,10 +2,9 @@ import { mockApi, clearMockUserData } from './mockApi';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || 'http://localhost:8000';
 
-// Use mock API if no backend URL is configured or if in production without backend
-const USE_MOCK = API_BASE === 'https://your-backend-api-url.com' || 
-                 (import.meta.env.PROD && API_BASE.includes('localhost')) ||
-                 import.meta.env.VITE_USE_MOCK === 'true';
+// Use mock API only when explicitly enabled or when backend URL is placeholder
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' ||
+                 API_BASE === 'https://your-backend-api-url.com';
 
 console.log('API Configuration:', {
   API_BASE,

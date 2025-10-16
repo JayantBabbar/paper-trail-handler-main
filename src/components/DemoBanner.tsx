@@ -3,8 +3,7 @@ import { Info } from "lucide-react";
 
 export function DemoBanner() {
   const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true' ||
-                   import.meta.env.VITE_API_URL === 'https://your-backend-api-url.com' || 
-                   (import.meta.env.PROD && import.meta.env.VITE_API_URL?.includes('localhost'));
+                   import.meta.env.VITE_API_URL === 'https://your-backend-api-url.com';
 
   if (!USE_MOCK) return null;
 
