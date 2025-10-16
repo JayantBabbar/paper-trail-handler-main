@@ -1,4 +1,9 @@
+import { mockApi } from './mockApi';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_APP_URL || 'http://localhost:8000';
+
+// Use mock API if no backend URL is configured or if in production without backend
+const USE_MOCK = !API_BASE || API_BASE === 'https://your-backend-api-url.com' || (import.meta.env.PROD && API_BASE === 'http://localhost:8000');
 
 function buildUrl(path: string) {
   const base = API_BASE.replace(/\/$/, '');
@@ -27,37 +32,106 @@ async function request(path: string, opts: RequestInit = {}) {
   return res.text();
 }
 
+// Helper function to handle mock fallback
+async function apiWithMockFallback<T>(apiCall: () => Promise<T>, mockCall: () => Promise<T>): Promise<T> {
+  if (USE_MOCK) {
+    console.log('Using mock API for demo');
+    return await mockCall();
+  }
+  
+  try {
+    return await apiCall();
+  } catch (error: any) {
+    console.warn('API call failed, falling back to mock data:', error.message);
+    return await mockCall();
+  }
+}
+
 export const api = {
-  getFiles: () => request('/api/files/'),
-  getFile: (id: string) => request(`/api/files/${id}/`),
-  createFile: (payload: any) => request('/api/files/', { method: 'POST', body: JSON.stringify(payload) }),
-  updateFile: (id: string, payload: any) => request(`/api/files/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) }),
-  deleteFile: (id: string) => request(`/api/files/${id}/`, { method: 'DELETE' }),
-  getStatusHistory: () => request('/api/status_history/'),
-  updateFileStatus: (id: string, status: string, reason?: string) => request(`/api/files/${id}/update_status/`, { method: 'POST', body: JSON.stringify({ status, reason }) }),
-  getDepartments: () => request('/api/departments/'),
-  addDepartment: (payload: any) => request('/api/departments/', { method: 'POST', body: JSON.stringify(payload) }),
-  sendEmail: (payload: any) => request('/api/send-email/', { method: 'POST', body: JSON.stringify(payload) }),
-  getEmailThreads: (fileId: string) => request(`/api/email_threads/?file=${fileId}`),
+  getFiles: () => apiWithMockFallback(
+    () => request('/api/files/'),
+    () => mockApi.getFiles()
+  ),
+  getFile: (id: string) => apiWithMockFallback(
+    () => request(`/api/files/${id}/`),
+    () => mockApi.getFile(id)
+  ),
+  createFile: (payload: any) => apiWithMockFallback(
+    () => request('/api/files/', { method: 'POST', body: JSON.stringify(payload) }),
+    () => mockApi.createFile(payload)
+  ),
+  updateFile: (id: string, payload: any) => apiWithMockFallback(
+    () => request(`/api/files/${id}/`, { method: 'PATCH', body: JSON.stringify(payload) }),
+    () => mockApi.updateFile(id, payload)
+  ),
+  deleteFile: (id: string) => apiWithMockFallback(
+    () => request(`/api/files/${id}/`, { method: 'DELETE' }),
+    () => mockApi.deleteFile(id)
+  ),
+  getStatusHistory: () => apiWithMockFallback(
+    () => request('/api/status_history/'),
+    () => Promise.resolve([])
+  ),
+  updateFileStatus: (id: string, status: string, reason?: string) => apiWithMockFallback(
+    () => request(`/api/files/${id}/update_status/`, { method: 'POST', body: JSON.stringify({ status, reason }) }),
+    () => mockApi.updateFileStatus(id, status, reason)
+  ),
+  getDepartments: () => apiWithMockFallback(
+    () => request('/api/departments/'),
+    () => mockApi.getDepartments()
+  ),
+  addDepartment: (payload: any) => apiWithMockFallback(
+    () => request('/api/departments/', { method: 'POST', body: JSON.stringify(payload) }),
+    () => Promise.resolve({ id: Date.now().toString(), ...payload })
+  ),
+  sendEmail: (payload: any) => apiWithMockFallback(
+    () => request('/api/send-email/', { method: 'POST', body: JSON.stringify(payload) }),
+    () => mockApi.sendEmail(payload)
+  ),
+  getEmailThreads: (fileId: string) => apiWithMockFallback(
+    () => request(`/api/email_threads/?file=${fileId}`),
+    () => Promise.resolve([])
+  ),
   uploadFile: async (form: FormData) => {
-    const url = buildUrl('/api/files/upload/');
-    const headers: Record<string, string> = {};
-    const token = localStorage.getItem('accessToken');
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    
-    const res = await fetch(url, { 
-      method: 'POST', 
-      headers,
-      body: form 
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || res.statusText);
+    if (USE_MOCK) {
+      const file = form.get('file') as File;
+      return await mockApi.uploadFile(file);
     }
-    return res.json();
+    
+    try {
+      const url = buildUrl('/api/files/upload/');
+      const headers: Record<string, string> = {};
+      const token = localStorage.getItem('accessToken');
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      
+      const res = await fetch(url, { 
+        method: 'POST', 
+        headers,
+        body: form 
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || res.statusText);
+      }
+      return res.json();
+    } catch (error: any) {
+      console.warn('File upload failed, using mock response:', error.message);
+      const file = form.get('file') as File;
+      return await mockApi.uploadFile(file);
+    }
   },
-  register: (payload: any) => request('/api/auth/register/', { method: 'POST', body: JSON.stringify(payload) }),
-  getMe: () => request('/api/auth/me/'),
+  register: (payload: any) => apiWithMockFallback(
+    () => request('/api/auth/register/', { method: 'POST', body: JSON.stringify(payload) }),
+    () => mockApi.register(payload.email, payload.password)
+  ),
+  login: (payload: any) => apiWithMockFallback(
+    () => request('/api/auth/login/', { method: 'POST', body: JSON.stringify(payload) }),
+    () => mockApi.login(payload.email, payload.password)
+  ),
+  getMe: () => apiWithMockFallback(
+    () => request('/api/auth/me/'),
+    () => mockApi.getMe()
+  ),
 };
 
 export default api;

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FileUploadForm } from "@/components/FileUploadForm";
 import { FilesList } from "@/components/FilesList";
 import { ViewDetails } from "@/components/ViewDetails";
+import { DemoBanner } from "@/components/DemoBanner";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, List } from "lucide-react";
 import { useParams } from "react-router-dom";
@@ -28,6 +29,7 @@ const Index = () => {
     <div className="min-h-screen bg-[#F6F6F7]">
       <Navbar />
       <div className="container max-w-full py-2 pt-[calc(2.5rem+20px)] px-2 md:px-4">
+        <DemoBanner />
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
           <h1 className="text-2xl md:text-3xl font-semibold font-inter text-[#222222]">
            DAK-System
