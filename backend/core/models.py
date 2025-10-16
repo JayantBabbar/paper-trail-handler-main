@@ -24,7 +24,7 @@ class File(models.Model):
     remarks = models.TextField(null=True, blank=True)
     needs_return = models.BooleanField(default=False)
     storage_path = models.CharField(max_length=1024, null=True, blank=True)
-    owner = models.ForeignKey(AuthUser, related_name='files', on_delete=models.CASCADE)
+    owner = models.ForeignKey(AuthUser, related_name='files', on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

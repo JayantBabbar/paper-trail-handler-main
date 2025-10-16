@@ -33,7 +33,10 @@ class FileViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         # Only return files owned by the authenticated user
-        return File.objects.filter(owner=self.request.user).order_by('-created_at')
+        # Handle legacy files without owner (show to all users temporarily)
+        user_files = File.objects.filter(owner=self.request.user)
+        legacy_files = File.objects.filter(owner__isnull=True)
+        return (user_files | legacy_files).distinct().order_by('-created_at')
     
     def perform_create(self, serializer):
         # Automatically set the owner to the authenticated user
